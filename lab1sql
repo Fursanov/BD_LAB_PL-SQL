@@ -1,0 +1,109 @@
+------------------------------создание таблицы. Задание 1
+--CREATE TABLE MYTABLE
+--(
+--    id      NUMBER UNIQUE,
+--    val     NUMBER
+--);
+
+------------------------------удаление таблицы
+--DROP TABLE MYTABLE;
+
+------------------------------заполнение таблицы рандомом. Задание 2
+--DECLARE
+--    v_id NUMBER := 1;
+--    v_val NUMBER;
+--BEGIN
+--    WHILE v_id <= 10 LOOP
+--        v_val := dbms_random.RANDOM();
+--        INSERT INTO MYTABLE (ID, VAL)
+--        VALUES (v_id, v_val);
+--        v_id := v_id + 1;
+--    END LOOP;
+--END;
+
+------------------------------вывод таблицы
+--SELECT * FROM MYTABLE;
+
+------------------------------создание функции чет\нечет. Задание 3
+--CREATE OR REPLACE FUNCTION compare
+--    RETURN VARCHAR2
+--    IS
+--    my_counter NUMBER := 0;
+--BEGIN
+--  FOR i IN (SELECT * FROM MyTable) LOOP
+--    if MOD(i.val, 2) = 0 then
+--      my_counter := my_counter + 1;
+--    else
+--      my_counter := my_counter - 1;
+--    end if;
+--  END LOOP;
+--
+--  IF my_counter > 0 THEN
+--    RETURN 'TRUE';
+----    DBMS_OUTPUT.put_line('TRUE');
+--  ELSIF my_counter < 0 THEN
+--    RETURN 'FALSE';
+----    DBMS_OUTPUT.put_line('FALSE');
+--  ELSE
+----    DBMS_OUTPUT.put_line('EQUAL');
+--    RETURN 'EQUAL';
+--  END IF;
+--END;
+
+------------------------------вызов функции чет\нечет
+--BEGIN
+--    DBMS_OUTPUT.PUT_LINE(compare());
+--END;
+
+------------------------------создание функции генератор вставки. Задание 4
+--CREATE OR REPLACE FUNCTION enerate_insert(my_id NUMBER)
+--    RETURN VARCHAR2
+--    IS
+--BEGIN
+--    FOR i in (SELECT * FROM MyTable WHERE id = my_id) LOOP
+--        RETURN 'INSERT INTO MYTABLE (id, val) VALUES (' ||  TO_CHAR(i.id) || ', ' || TO_CHAR(i.val) || ');';
+--    end loop;
+--    RETURN 'There is no record with this id';
+--END;
+
+------------------------------вызов функции генератор вставки
+--BEGIN
+--    DBMS_OUTPUT.put_line(enerate_insert(1));
+--END;
+
+------------------------------создание функций DML. Задание 5
+--CREATE OR REPLACE PROCEDURE my_insert(my_id NUMBER, my_val NUMBER) IS
+--BEGIN
+--  INSERT INTO MYTABLE (id, val)
+--  VALUES (my_id, my_val);
+--END;
+--CREATE OR REPLACE PROCEDURE my_update(my_id NUMBER, my_val NUMBER) IS
+--BEGIN
+--  UPDATE MYTABLE
+--  SET val = my_val
+--  WHERE id = my_id;
+--END;
+--CREATE OR REPLACE PROCEDURE my_delete(my_id NUMBER) IS
+--BEGIN
+--  DELETE FROM MYTABLE
+--  WHERE id = my_id;
+--END;
+
+------------------------------создание функции годовой зп. Задание 6
+--CREATE OR REPLACE FUNCTION annual_salary(monthly_salary NUMBER, annular_bonuses NUMBER)
+--RETURN VARCHAR2
+--IS
+--BEGIN
+--    IF monthly_salary < 0 OR annular_bonuses < 0 THEN
+--        RETURN 'Incorrect input';
+--    END IF;
+--    RETURN TO_CHAR((1 + annular_bonuses / 100) * 12 * monthly_salary);
+--END;
+
+------------------------------вызов функции годовой зп
+--BEGIN
+--    DBMS_OUTPUT.put_line(annual_salary(1200, 'asd'));
+--    EXCEPTION
+--        WHEN VALUE_ERROR THEN
+--            DBMS_OUTPUT.put_line('Incorrect input');
+--END;
