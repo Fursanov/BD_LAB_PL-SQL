@@ -1,0 +1,143 @@
+--------------------------------создание таблиц. Задание 1
+--CREATE TABLE STUDENTS
+--(
+--    id          NUMBER,
+--    name        VARCHAR2(55),
+--    group_id    NUMBER
+--);
+--
+--CREATE TABLE GROUPS
+--(
+--    id          NUMBER,
+--    name        VARCHAR2(7),
+--    c_val       NUMBER
+--);
+--------------------------------создание триггеров и последовательностей. Задание 2
+-------------------последовательность автоинкремента id студентов
+--CREATE SEQUENCE student_id_seq
+--START WITH 1;
+-------------------последовательность автоинкремента id групп
+--CREATE SEQUENCE group_id_seq
+--START WITH 1;
+--
+-------------------триггер автоинкремента id групп
+--CREATE OR REPLACE TRIGGER group_id_add
+--BEFORE INSERT ON "GROUPS"
+--FOR EACH ROW
+--BEGIN
+--    :new.ID := group_id_seq.nextval;
+--END;
+-------------------триггер автоинкремента id студентов
+--CREATE OR REPLACE TRIGGER students_id_add
+--BEFORE INSERT ON STUDENTS
+--FOR EACH ROW
+--BEGIN
+--    :new.ID := student_id_seq.nextval;
+--END;
+-------------------триггер проверки уникальности имен групп
+--    CREATE OR REPLACE TRIGGER group_name_check
+--    BEFORE INSERT ON "GROUPS"
+--    FOR EACH ROW
+--    DECLARE
+--        counter NUMBER;
+--    BEGIN
+--        SELECT COUNT(*) INTO counter FROM "GROUPS" WHERE name = :new.name;
+--        IF counter > 0 THEN
+--            RAISE_APPLICATION_ERROR(-20535, 'There is already such a group name');
+--        END IF;
+--    END;
+-------------------триггер проверки уникальности id студентов
+--CREATE OR REPLACE TRIGGER students_id_check
+--BEFORE INSERT ON STUDENTS
+--FOR EACH ROW
+--DECLARE
+--    counter NUMBER;
+--BEGIN
+--    SELECT COUNT(*) INTO counter FROM STUDENTS WHERE ID = :new.id;
+--    IF counter > 0 THEN
+--        RAISE_APPLICATION_ERROR(-20535, 'There is already such a student ID');
+--    END IF;
+--END;
+-------------------триггер проверки уникальности id групп
+--CREATE OR REPLACE TRIGGER group_id_check
+--BEFORE INSERT ON "GROUPS"
+--FOR EACH ROW
+--DECLARE
+--    counter NUMBER;
+--BEGIN
+--    SELECT COUNT(*) INTO counter FROM "GROUPS" WHERE ID = :new.id;
+--    IF counter > 0 THEN
+--        RAISE_APPLICATION_ERROR(-20535, 'There is already such a grop ID');
+--    END IF;
+--END;
+-------------------триггер проверки существование группы
+--CREATE OR REPLACE TRIGGER students_add_group_check
+--BEFORE INSERT ON "STUDENTS"
+--FOR EACH ROW
+--DECLARE
+--    counter NUMBER := 0;
+--BEGIN
+--    SELECT COUNT(*) INTO counter FROM "GROUPS" WHERE ID = :new.group_id;
+--    IF counter = 0 THEN
+--        RAISE_APPLICATION_ERROR(-20535, 'There is no such group');
+--    END IF;
+--END;
+--------------------------------проверка триггеров и последовательностей
+--INSERT INTO Groups (name, c_val) VALUES ('053502', 0);
+--INSERT INTO Groups (name, c_val) VALUES ('053502', 0);
+--INSERT INTO Groups (name, c_val) VALUES ('050502', 0);
+
+--SELECT * FROM GROUPS;
+--UPDATE STUDENTS SET name = 'SELCHANOWICH MAKSIM' where id = 2;
+--UPDATE STUDENTS SET name = 'FURSANOV SIARHEY' where id = 1;
+--UPDATE STUDENTS SET name = 'USMANOV MIHAIL' where id = 3;
+--UPDATE STUDENTS SET name = 'DASHKEWiTCH NIKITA' where id = 4;
+--INSERT INTO Students (name, group_id) VALUES ('FURSANOV SIARHEY', 1);
+--INSERT INTO Students (name, group_id) VALUES ('FURSANOV SIARHEY', 1);
+--INSERT INTO Students (name, group_id) VALUES ('FURSANOV SIARHEY', 3);
+--INSERT INTO Students (name, group_id) VALUES ('DASHKEWiTCH NIKITA', 2);
+--DELETE FROM STUDENTS where id = 1;
+--DELETE FROM "GROUPS" where id = -2;
+--SELECT * FROM STUDENTS;
+--------------------------------триггер реализующий Foreign Key с каскадным удалением между таблицами STUDENTS и GROUPS. Задание 3
+--CREATE OR REPLACE TRIGGER group_f_key
+--BEFORE DELETE ON "GROUPS"
+--FOR EACH ROW
+--BEGIN
+--    DELETE FROM STUDENTS WHERE group_id = :old.id;
+--END;
+--------------------------------Логирование таблицы STUDENTS. Задание 4
+
+CREATE TABLE Logging(
+    id NUMBER PRIMARY KEY,
+    action VARCHAR2(10),
+    time TIMESTAMP,
+    st_id_prev NUMBER,
+    st_id NUMBER,
+    st_name VARCHAR2(50),
+    st_group_id NUMBER
+);
+
+--SELECT * FROM Logging;
+--CREATE SEQUENCE logging_id_seq
+--START WITH 1;
+--CREATE OR REPLACE TRIGGER students_logging
+--AFTER INSERT OR UPDATE OR DELETE ON STUDENTS
+--FOR EACH ROW
+--DECLARE
+--    action VARCHAR2(10);
+--BEGIN
+--    IF INSERTING THEN
+--        action := 'INSERT';
+--        INSERT INTO Logging (id, action, "time", st_id, st_name, st_group_id)
+--            VALUES (logging_id_seq.nextval, action, CURRENT_TIMESTAM, :new.id, :new.name, :new.group_id);
+--    ELSIF UPDATING THEN
+--        cur_action := 'UPDATE';
+--        INSERT INTO Logging (id, action, "time", st_id, st_name, st_group_id)
+--            VALUES (logging_id_seq.nextval, action, CURRENT_TIMESTAMP, :new.id, :old.name, :old.group_id);
+--    ELSIF DELETING THEN
+--        cur_action := 'DELETE';
+--        INSERT INTO Logging (id, action, "time", st_id, st_name, st_group_id)
+--            VALUES (logging_id_seq.nextval, action, CURRENT_TIMESTAMP, null, :old.name, :old.group_id);
+--  END IF;
+--END;
