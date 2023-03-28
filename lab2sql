@@ -87,16 +87,17 @@
 --INSERT INTO Groups (name, c_val) VALUES ('053502', 0);
 --INSERT INTO Groups (name, c_val) VALUES ('050502', 0);
 
-SELECT * FROM GROUPS;
+--SELECT * FROM GROUPS;
 --UPDATE STUDENTS SET name = 'SELCHANOWICH MAKSIM' where id = 2;
---UPDATE STUDENTS SET name = 'FURSANOV SIARHEY' where id = 1;
+--UPDATE STUDENTS SET name = 'kjbkbjblkb' where id = 24;
 --UPDATE STUDENTS SET name = 'USMANOV MIHAIL' where id = 3;
 --UPDATE STUDENTS SET name = 'DASHKEWiTCH NIKITA' where id = 4;
 --INSERT INTO Students (name, group_id) VALUES ('FURSANOV SIARHEY', 1);
 --INSERT INTO Students (name, group_id) VALUES ('FURSANOV SIARHEY', 1);
 --INSERT INTO Students (name, group_id) VALUES ('FURSANOV SIARHEY', 3);
---INSERT INTO Students (name, group_id) VALUES ('DASHKEWiTCH NIKITA', 2);
---DELETE FROM STUDENTS where id = 21;
+--INSERT INTO Students (name, group_id) VALUES ('COOPER ALEGSASHKA', 2);
+--DELETE FROM STUDENTS where id = 22;
+--DELETE FROM STUDENTS where name = 'COOPER ALEGSASHKA';
 --DELETE FROM "GROUPS" where id = -2;
 --SELECT * FROM STUDENTS;
 --------------------------------триггер реализующий Foreign Key с каскадным удалением между таблицами STUDENTS и GROUPS. Задание 3
@@ -114,9 +115,7 @@ SELECT * FROM GROUPS;
 --    action_time TIMESTAMP,
 --    st_id_prev NUMBER,
 --    st_id NUMBER,
---    st_name_prev NUMBER,
 --    st_name VARCHAR2(50),
---    st_group_prev NUMBER,
 --    st_group_id NUMBER
 --);
 ---------------- вывод таблицы логов
@@ -125,64 +124,58 @@ SELECT * FROM GROUPS;
 --CREATE SEQUENCE logging_id_seq
 --START WITH 1;
 ----------------триггер логирования действий над таблицей STUDENTS
-CREATE OR REPLACE TRIGGER students_logging
-AFTER INSERT OR UPDATE OR DELETE ON Students
-FOR EACH ROW
-DECLARE
-    cur_action VARCHAR2(10);
-BEGIN
-    IF INSERTING THEN
-        cur_action := 'INSERT';
-        INSERT INTO Stud_log (id, action, action_time, st_id_prev, st_id, st_name_prev, st_name, st_group_prev, st_group_id)
-            VALUES (logging_id_seq.nextval, cur_action, CURRENT_TIMESTAMP, null, :new.id, null, :new.name, null, :new.group_id);
-    ELSIF UPDATING THEN
-        cur_action := 'UPDATE';
-        INSERT INTO Stud_log (id, action, action_time, st_id_prev, st_id, st_name_prev, st_name, st_group_prev, st_group_id)
-            VALUES (logging_id_seq.nextval, cur_action, CURRENT_TIMESTAMP, :old.id, :new.id, :old.id, :new.name, :old.id, :new.group_id);
-    ELSIF DELETING THEN
-        cur_action := 'DELETE';
-        INSERT INTO Stud_log (id, action, action_time, st_id_prev, st_id, st_name_prev, st_name, st_group_prev, st_group_id)
-            VALUES (logging_id_seq.nextval, cur_action, CURRENT_TIMESTAMP, :old.id, null, :old.name, null, :old.group_id, null);
-  END IF;
-END;
-
+--CREATE OR REPLACE TRIGGER students_logging
+--AFTER INSERT OR UPDATE OR DELETE ON Students
+--FOR EACH ROW
+--DECLARE
+--    cur_action VARCHAR2(10);
+--BEGIN
+--    IF INSERTING THEN
+--        cur_action := 'INSERT';
+--        INSERT INTO Stud_log (id, action, action_time, st_id_prev, st_id, st_name, st_group_id)
+--            VALUES (logging_id_seq.nextval, cur_action, CURRENT_TIMESTAMP, null, :new.id, :new.name, :new.group_id);
+--    ELSIF UPDATING THEN
+--        cur_action := 'UPDATE';
+--        INSERT INTO Stud_log (id, action, action_time, st_id_prev, st_id, st_name, st_group_id)
+--            VALUES (logging_id_seq.nextval, cur_action, CURRENT_TIMESTAMP, :old.id, :new.id, :new.name, :new.group_id);
+--    ELSIF DELETING THEN
+--        cur_action := 'DELETE';
+--        INSERT INTO Stud_log (id, action, action_time, st_id_prev, st_id, st_name, st_group_id)
+--            VALUES (logging_id_seq.nextval, cur_action, CURRENT_TIMESTAMP, :old.id, null, :old.name, :old.group_id);
+--  END IF;
+--END;
+--------------------------------процедура восстановления таблицы STUDENTS из логов. Задание 5
 --CREATE OR REPLACE PROCEDURE restore_students(t TIMESTAMP) IS
 --BEGIN
---    FOR i in (SELECT action, st_id_prev, st_id, st_name, st_group
---              FROM Logging WHERE logging_time >= t ORDER BY id DESC) LOOP
+--    FOR i in (SELECT action, st_id_prev, st_id, st_name, st_group_id
+--              FROM Stud_log WHERE action_time <= t ORDER BY id DESC) LOOP
 --        IF i.action = 'INSERT' THEN
 --            DELETE FROM Students WHERE id = i.st_id;
 --        ELSIF i.action = 'UPDATE' THEN
---            UPDATE Students SET id = i.st_id_prev, name = i.st_name, group_id = i.st_group WHERE id = i.st_id;
+--            UPDATE Students SET id = i.st_id_prev, name = i.st_name, group_id = i.st_group_id WHERE id = i.st_id;
 --        ELSIF i.action = 'DELETE' THEN
---            INSERT INTO Students (id, name, group_id) VALUES (i.st_id_prev, i.st_name, i.st_group);
+--            INSERT INTO Students (id, name, group_id) VALUES (i.st_id_prev, i.st_name, i.st_group_id);
 --        END IF;
 --    END LOOP;
 --END;
---SELECT *
---FROM Logging;
+--------------------------------вызов процедуры восстановления
 --BEGIN
---    restore_information(TO_TIMESTAMP('20.02.2023 14:46:20'));
---    --restore_information(TO_TIMESTAMP(CURRENT_TIMESTAMP - 10));
+--restore_students(TO_TIMESTAMP('20 NOV 2023 12:46:20'));
+----restore_students(TO_TIMESTAMP(CURRENT_TIMESTAMP - 10));
 --END;
-----Sixth one
-----Trigger for updating the amount of students in a group
---CREATE OR REPLACE TRIGGER amount_updating
+--SELECT * FROM STUDENTS;
+
+--CREATE OR REPLACE TRIGGER c_val_update
 --AFTER DELETE OR INSERT OR UPDATE ON Students
 --FOR EACH ROW
 --BEGIN
 --    IF INSERTING THEN
---        upd(:new.group_id, 1);
+--        UPDATE Groups SET c_val = c_val + 1 WHERE id = :new.group_id;
 --    ELSIF DELETING THEN
---        upd(:old.group_id, -1);
+--        UPDATE Groups SET c_val = c_val - 1 WHERE id = :old.group_id;
 --    ELSIF UPDATING THEN
---        upd(:new.group_id, 1);
---        upd(:old.group_id, -1);
+--        UPDATE Groups SET c_val = c_val + 1 WHERE id = :new.group_id;
+--        UPDATE Groups SET c_val = c_val - 1 WHERE id = :old.group_id;
 --    END IF;
 --END;
---CREATE OR REPLACE PROCEDURE upd(in_id NUMBER, cnt NUMBER) IS
---    PRAGMA AUTONOMOUS_TRANSACTION;
---BEGIN
---    UPDATE Groups SET students_cnt = students_cnt + cnt WHERE id = in_id;
---    Commit;
---END;
+--DROP TRIGGER c_val_update;
